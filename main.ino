@@ -49,13 +49,13 @@ void loop(){
         float current = result.current;
         float Voltage = result.voltage;
 
-        Serial.print("Voltage: ");
-        Serial.println(Voltage); 
+        Serial.print("X= ");
+        Serial.print(Voltage); 
 
-        Serial.print("Current: ");
-        Serial.println(current); 
+        Serial.print("Y= ");
+        Serial.print(current); 
 
-        Serial.print("Base Current: ");
+        Serial.print("B= ");
         Serial.println(Base_current); 
 
         if (Serial.available()) {
