@@ -50,10 +50,12 @@ void loop(){
         float Voltage = result.voltage;
 
         Serial.print("X= ");
-        Serial.print(Voltage); 
+        Serial.print(Voltage);
+        Serial.print(',');  
 
         Serial.print("Y= ");
         Serial.print(current); 
+        Serial.print(',');  
 
         Serial.print("B= ");
         Serial.println(Base_current); 
