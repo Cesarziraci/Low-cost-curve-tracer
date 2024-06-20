@@ -1,81 +1,79 @@
-#ifndef Semi
-#define Semi
+#ifndef SEMICONDUCTOR_H
+#define SEMICONDUCTOR_H
 
-#include "Arduino.h" 
+#include <Arduino.h>
 
 struct Measurement {
-  float voltage;
-  float current;
-  float baseCurrent;
+    float baseCurrent;
+    float current;
+    float voltage;
 };
 
-class Semiconductor{
-  public:
+class Semiconductor {
+public:
     Semiconductor(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-
+    virtual ~Semiconductor() = default;
+    virtual Measurement characterize() = 0;
     void On();
     void Off();
-
     void set_positive_ramp();
     void set_negative_ramp();
 
-    virtual Measurement characterize() = 0;
-
-  protected:
+protected:
     int _powerPin;
     int _switchPin;
     int _basePin;
     int _voltagePin;
     int _currentPin;
-    int list_pos[6];
-    int list_neg[6];
-    const signed int Base_R = 50000;
-    const signed int Measure_R = 120;
-    unsigned long prev_millis;
-    signed int interval;
     Measurement results;
+    unsigned long prev_millis;
+    unsigned long interval;
+    const int list_pos[6] = {1861, 2234, 2482, 3103, 3723, 4096};
+    const int list_neg[6] = {1861, 1489, 1241, 992, 620, 0};
+    float Measure_R;
+    float Base_R;
 };
 
 class NMOS : public Semiconductor {
-  public:
+public:
     NMOS(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
 class PMOS : public Semiconductor {
-  public:
+public:
     PMOS(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
 class DIODE : public Semiconductor {
-  public:
+public:
     DIODE(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
 class BJTN : public Semiconductor {
-  public:
+public:
     BJTN(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
 class BJTP : public Semiconductor {
-  public:
+public:
     BJTP(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
 class NFET : public Semiconductor {
-  public:
+public:
     NFET(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
 class PFET : public Semiconductor {
-  public:
+public:
     PFET(int powerPin, int switchPin, int basePin, int voltagePin, int currentPin);
-    Measurement characterize();
+    Measurement characterize() override;
 };
 
-#endif
+#endif // SEMICONDUCTOR_H

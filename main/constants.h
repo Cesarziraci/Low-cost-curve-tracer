@@ -1,5 +1,6 @@
 #ifndef Constants
 #define Constants
+
 #include "Semiconductor.h"
 
 #define STATE_PIN 1
