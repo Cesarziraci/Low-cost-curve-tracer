@@ -88,12 +88,9 @@ Measurement DIODE::characterize() {
         On();
         unsigned long currentMillis = millis();
         if (currentMillis - prev_millis >= interval) {
-            results.voltage = analogRead(_voltagePin)* 5 / 4095.0;
-            for (int j = 0; j <= 20; j++) {
-                results.current += analogRead(_currentPin) * 5 / 4095.0;
-            }
-            results.current = (results.current / Measure_R) / 20;
-            prev_millis = currentMillis;
+          results.voltage = analogRead(_voltagePin) * 3.3 / 4096.0;
+          results.current = (((float)analogRead(_currentPin) * 3.3 / 4096.0) / 1500) * 1000;
+          prev_millis = currentMillis;
         }
     }
     return results;
