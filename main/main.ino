@@ -41,10 +41,8 @@ void loop() {
             prevMillis = currentMillis;
             Measurement results = semiconductor->characterize();
             
-            Serial.print("Voltaje: ");
             Serial.print(results.voltage);
-            Serial.print("  |  ");
-            Serial.print("Corriente: ");
+            Serial.print(" ");
             Serial.println(results.current);
         }
     }
