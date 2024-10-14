@@ -2,12 +2,12 @@
 #define A_raw A2
 #define Base_current A0 
 #define V_ramp A3
-#define S1 3
-#define S2 2
+#define S1 2
+#define S2 1
 
 void READ();
 void procesarComando(String comando);
-void CicloTransistor(const int polaridad_V_Base);
+void Ciclo(const int polaridad_V_Base);
 
 const int V_ref = 5;
 const int ADC_resolution = 4095;  // Resolución ADC 12 bits
@@ -25,7 +25,6 @@ typedef struct {
   String tipo;
   bool S1State = LOW;
   bool S2State = LOW;
-  float B_value;
 
   void SemiconductorConfig(){
     float V_ramp_value;
@@ -83,7 +82,6 @@ void setup(){
   PBJT.S2State = HIGH; 
   PBJT.B_value = 0.0;
   
-  digitalWrite(S1, LOW);
 }
 
 void loop(){
@@ -96,7 +94,7 @@ void loop(){
     unsigned long currentMillis = millis();
     if(currentMillis - previousMillis >= readInterval){
       previousMillis = currentMillis;
-      CicloTransistor(polaridadActual);
+      Ciclo(polaridadActual);
     }
   }
 }
@@ -208,7 +206,7 @@ void procesarComando(String comando) {
   }
 }
 
-void CicloTransistor(const int polaridad_V_Base){
+void Ciclo(const int polaridad_V_Base){
   static float V_base = 1.5; // Valor inicial de V_base
   static unsigned long lastReadMillis = 0;
   static unsigned long prev= 0;
@@ -222,24 +220,26 @@ void CicloTransistor(const int polaridad_V_Base){
     READ(); // Leer los valores
   }
 
-  unsigned long cur1 = millis();
-  if (cur1 - lastReadMillis >= 120) {
-    lastReadMillis = cur1;
+  if(semiconductorActivo !="DIODE"){
+    unsigned long cur1 = millis();
+    if (cur1 - lastReadMillis >= 120) {
+        lastReadMillis = cur1;
 
-    if (polaridad_V_Base == 1) {
-      V_base += 0.3; // Aumentar V_base
-      if (V_base >= 3.0) {
-        V_base = 1.5; 
-      }
-    } else if (polaridad_V_Base == -1) {
-      V_base -= 0.3; // Disminuir V_base
-      if (V_base <= 0.0) {
-        V_base = 1.5; 
-      }
+        if (polaridad_V_Base == 1) {
+        V_base += 0.3; // Aumentar V_base
+        if (V_base >= 3.0) {
+            V_base = 1.5; 
+        }
+        } else if (polaridad_V_Base == -1) {
+        V_base -= 0.3; // Disminuir V_base
+        if (V_base <= 0.0) {
+            V_base = 1.5; 
+        }
+        }
+        B_fixed = V_base; //(V_base * 6) / R2; // Corriente de base para el cálculo de Beta
+        // Convertir V_base a valor DAC
+        int analog_value = (int)((V_base / V_ref) * DAC_resolution);
+        analogWrite(Base_current, analog_value);  
     }
-    B_fixed = V_base; //(V_base * 6) / R2; // Corriente de base para el cálculo de Beta
-    // Convertir V_base a valor DAC
-    int analog_value = (int)((V_base / V_ref) * DAC_resolution);
-    analogWrite(Base_current, analog_value);  
   }
 }
