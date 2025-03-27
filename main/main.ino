@@ -4,10 +4,12 @@
 #define V_ramp A3
 #define S1 2
 #define S2 1
+#define S3 3
+#define S4 4
 
 void READ();
 void procesarComando(String comando);
-void Ciclo(const int polaridad_V_Base);
+void CicloTransistor(const int polaridad_V_Base);
 
 const int V_ref = 5;
 const int ADC_resolution = 4095;  // Resolución ADC 12 bits
@@ -25,6 +27,9 @@ typedef struct {
   String tipo;
   bool S1State = LOW;
   bool S2State = LOW;
+  bool S3State = LOW;
+  bool S4State = LOW;
+  float B_value;
 
   void SemiconductorConfig(){
     float V_ramp_value;
@@ -34,6 +39,9 @@ typedef struct {
 
     digitalWrite(S1, S1State ? HIGH:LOW);
     digitalWrite(S2, S2State ? HIGH:LOW);
+    digitalWrite(S3, S3State ? HIGH:LOW);
+    digitalWrite(S4, S4State ? HIGH:LOW);
+
 
   }
 
@@ -46,42 +54,59 @@ void setup(){
 
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(S4, OUTPUT);
 
   DIODE.tipo = "DIODE";
   DIODE.S1State = LOW;
   DIODE.S2State = LOW; 
+  DIODE.S3State = LOW;
+  DIODE.S4State = LOW; 
   DIODE.B_value = 0.0;
 
   NMOS.tipo = "NMOS";
   NMOS.S1State = LOW;
   NMOS.S2State = LOW; 
+  NMOS.S3State = LOW;
+  NMOS.S4State = LOW; 
   NMOS.B_value = 0.0;
   
   PMOS.tipo = "PMOS";
   PMOS.S1State = LOW;
   PMOS.S2State = HIGH; 
+  PMOS.S3State = HIGH;
+  PMOS.S4State = HIGH; 
   PMOS.B_value = 0.0;
   
   NFET.tipo = "NFET";
   NFET.S1State = LOW;
-  NFET.S2State = LOW; 
+  NFET.S2State = LOW;
+  NFET.S3State = LOW;
+  NFET.S4State = LOW;  
   NFET.B_value = 0.0;
   
   PFET.tipo = "PFET";
   PFET.S1State = LOW;
   PFET.S2State = HIGH; 
+  PFET.S3State = HIGH;
+  PFET.S4State = HIGH; 
   PFET.B_value = 0.0;
   
   NBJT.tipo = "NBJT";
   NBJT.S1State = LOW;
   NBJT.S2State = LOW; 
+  NBJT.S3State = LOW;
+  NBJT.S4State = LOW; 
   NBJT.B_value = 0.0;
   
   PBJT.tipo = "PBJT";
   PBJT.S1State = LOW;
   PBJT.S2State = HIGH; 
+  PBJT.S3State = HIGH;
+  PBJT.S4State = HIGH; 
   PBJT.B_value = 0.0;
   
+  digitalWrite(S1, LOW);
 }
 
 void loop(){
@@ -94,7 +119,7 @@ void loop(){
     unsigned long currentMillis = millis();
     if(currentMillis - previousMillis >= readInterval){
       previousMillis = currentMillis;
-      Ciclo(polaridadActual);
+      CicloTransistor(polaridadActual);
     }
   }
 }
@@ -105,11 +130,11 @@ void READ(){
   float A_buff = (float)analogRead(A_raw) * (V_ref * 3)/(ADC_resolution);
 
   // se debbe multiplicar por 2 por el divisor de tension equivalente
-  float A_fixed = (A_buff/R1) * 2;
+  float A_fixed = (A_buff* 2 /R1) *1000;
 
   Serial.print("X= "); Serial.print(V_fixed);
   Serial.print(",Y= "); Serial.print(A_fixed);
-  Serial.print(" ,B= "); Serial.print(B_fixed, 6);
+  Serial.print(" ,B= "); Serial.print(B_fixed, 4);
   Serial.print('\n');
 
 }
@@ -206,7 +231,7 @@ void procesarComando(String comando) {
   }
 }
 
-void Ciclo(const int polaridad_V_Base){
+void CicloTransistor(const int polaridad_V_Base){
   static float V_base = 1.5; // Valor inicial de V_base
   static unsigned long lastReadMillis = 0;
   static unsigned long prev= 0;
@@ -220,26 +245,24 @@ void Ciclo(const int polaridad_V_Base){
     READ(); // Leer los valores
   }
 
-  if(semiconductorActivo !="DIODE"){
-    unsigned long cur1 = millis();
-    if (cur1 - lastReadMillis >= 120) {
-        lastReadMillis = cur1;
+  unsigned long cur1 = millis();
+  if (cur1 - lastReadMillis >= 120) {
+    lastReadMillis = cur1;
 
-        if (polaridad_V_Base == 1) {
-        V_base += 0.3; // Aumentar V_base
-        if (V_base >= 3.0) {
-            V_base = 1.5; 
-        }
-        } else if (polaridad_V_Base == -1) {
-        V_base -= 0.3; // Disminuir V_base
-        if (V_base <= 0.0) {
-            V_base = 1.5; 
-        }
-        }
-        B_fixed = V_base; //(V_base * 6) / R2; // Corriente de base para el cálculo de Beta
-        // Convertir V_base a valor DAC
-        int analog_value = (int)((V_base / V_ref) * DAC_resolution);
-        analogWrite(Base_current, analog_value);  
+    if (polaridad_V_Base == 1) {
+      V_base += 0.3; // Aumentar V_base
+      if (V_base >= 3.0) {
+        V_base = 1.5; 
+      }
+    } else if (polaridad_V_Base == -1) {
+      V_base -= 0.3; // Disminuir V_base
+      if (V_base <= 0.0) {
+        V_base = 1.5; 
+      }
     }
+    B_fixed = V_base; //(V_base * 6) / R2; // Corriente de base para el cálculo de Beta
+    // Convertir V_base a valor DAC
+    int analog_value = (int)((V_base / V_ref) * DAC_resolution);
+    analogWrite(Base_current, analog_value);  
   }
 }
